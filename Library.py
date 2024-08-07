@@ -8,6 +8,10 @@ link_book = {}          # {'Book Name': 'Book ISBN'}, helps find book ISBN if se
 user = {}               # {User #ID: ['password', 'admin/member', user_obj]}
 transaction_log = {}    # {Transc ID: trans_obj}
 
+# counters to generate userIDs and transc IDS
+userID_CNT = 0
+transc_CNT = 0
+
 # Add user login/Sign up
 
 # Admin Interface
