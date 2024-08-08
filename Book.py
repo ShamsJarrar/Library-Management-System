@@ -6,6 +6,9 @@ class Copy:
         self.__transcID = -1            # If the book is borrowed, it connects it to a transaction
                                         # that contains all user details
     
+
+
+    # Getter functions
     def get_copyID(self):
         return self.__copyID
     
@@ -14,18 +17,26 @@ class Copy:
     
     def get_transcID(self):
         return self.__transcID
+    
 
+
+
+    # Update functions
     # Function to change book status
     def change_status(self, new_status, transID = '-1'):    
         self.__status = new_status
         self.__transcID = transID
 
-     # Function to display copy information and availability
+
+
+
+    # Display Functions
+    # Function to display copy information and availability
     def display_info(self):        
         print('Copy ID:', self.__copyID)
         print('\t Status:', self.__status)
     
-     # Admin display includes which transaction the copy is a part of if borrowed
+    # Admin display includes which transaction the copy is a part of if borrowed
     def admin_display(self):       
         print('Copy ID:', self.__copyID)
         print('\t Status:', self.__status)
@@ -43,10 +54,23 @@ class Book:
         self.__publisher = publisher
         self.__edition = edition        # string that indicates the book edition (1st, 2nd, etc)
         self.__category = category
-        self.__copies = {}              # a dictionay that stores all copies of the book through creating a copy object
-                                        # {'Copy ID' : copy_obj}
+        self.__copies = {}              # a dictionay that stores all copies of the book through creating a copy object {'Copy ID' : copy_obj}
+        self.__waitlist = []            # stores UserIDs that reserved the book                     
     
 
+
+
+    # Getter functions
+    def get_copies(self):
+        return self.__copies
+    
+    def get_waitlist(self):
+        return self.__waitlist
+
+
+
+
+    # Update Copy functions
     # function that takes a string of the new copy's ID and adds it to copies dictionary
     def add_copy(self, copy_id):
         if(copy_id in self.__copies):
@@ -66,7 +90,22 @@ class Book:
     # function that changes copy status if borrowed or returned by taking strings
     def change_copy_status(self, copy_id, new_status, trans_id = '-1'):
         self.__copies[copy_id].change_status(new_status, trans_id)
+    
+    
 
+
+    # Update waitlist functions
+    # function to add to waitlist
+    def add_waitlist(self, userID):
+        self.__waitlist.append(userID)
+    
+    def remove_from_waitlist(self):
+        del self.__waitlist[0]
+    
+
+
+
+    # Display functions
     # function that prints all of the book's information
     def display_book_info(self):
         print('ISBN:', self.__ISBN)
@@ -85,6 +124,7 @@ class Book:
     def admin_display_copies(self):
         for key in self.__copies:
             self.__copies[key].admin_display()
+    
 
 
 

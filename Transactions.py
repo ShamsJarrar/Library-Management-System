@@ -1,6 +1,10 @@
 from datetime import date
 
 # object to save transaction details
+# when transaction occurs, other functions change the status of the copy of the book
+# the purpose of the class is the log all transactions
+# and connect user details with book details and transaction details
+# and to be able to calculate fines
 class Transaction:
     def __init__(self, ID, bookID, copyID, userID, returning_date, late_fine):
         self.__ID = ID                          # integer to specify transaction ID
@@ -14,11 +18,10 @@ class Transaction:
         self.__status = 'Borrow'
         self.__fineValue = late_fine            # factor to multiply with for every late day
     
-    # when transaction occurs, other functions change the status of the copy of the book
-    # the purpose of the class is the log all transactions
-    # and connect user details with book details and transaction details
-    # and to be able to calculate fines
 
+
+
+    # Getter functions
     def get_ID(self):
         return self.__ID
     
@@ -37,6 +40,10 @@ class Transaction:
     def get_fine(self):
         return self.__fine
     
+
+
+
+    # Diplay functions
     # this function is for displaying info for admins for purposes of tracking
     def display_info(self):
         print('Transaction ID:', self.__ID)
@@ -51,7 +58,10 @@ class Transaction:
             print('Fine:', self.__fine)
     
 
-    #function to calculate how many days are left to return the borrowed book
+
+
+    # Operations
+    # function to calculate how many days are left to return the borrowed book
     def calculate_dueDate(self):
         if(self.__status == 'Returned'):
             print('Book was returned')
@@ -61,11 +71,9 @@ class Transaction:
             else:
                 print((date.today() - self.__returningDate).days, 'days overdue')
     
-
     # function to change status of the transaction and calculate the fine for the user based
     # on the difference between the actual returningDate and the day the user was supposed to originall return
     # the function return the fine value so that it is changed also changed in the user's objects too
-
     def return_book(self):
         self.__status = 'Returned'
         self.__actual_returned_date = date.today()

@@ -1,20 +1,26 @@
-
 from Transactions import Transaction
+from Book import Book, Copy
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
 class User:
-    def __init__(self, ID, password, name, phone_no, address):
-        self.__userID = ID                  # generated integer once account is created
-        self.__password = password          # string entered by the user
+    def __init__(self, ID, password, name, phone_no, address, library, transaction_log, link_book):
+        self.__userID = ID                          # generated integer once account is created
+        self.__password = password                  # string entered by the user
         self.__name = name
-        self.__phoneNo = phone_no           # since it is a local library, the phone number format is unified (string)
-        self.__address = address            # since it is a local library, the address will only consist of the neighborhood area
-        self.__borrowedBooks = {}           # {'Book Name': Transaction_obj}
-        self.__reservedBooks = []           # list of reserved books
-        self.__fines = 0                    # fines are calculated after returning the book
+        self.__phoneNo = phone_no                   # since it is a local library, the phone number format is unified (string)
+        self.__address = address                    # since it is a local library, the address will only consist of the neighborhood area
+        self.__borrowedBooks = {}                   # {'Book Name': Transaction_obj}
+        self.__reservedBooks = []                   # list of reserved books
+        self.__fines = 0                            # fines are calculated after returning the book
+        self.__library = library                    # {'Book ISBN': book_obj}
+        self.__transactionLog = transaction_log     # {Transc ID: trans_obj}
+        self.__linkBook = link_book                 # {'Book Name': 'Book ISBN'}
 
 
+
+
+    # Getter functions
     def get_ID(self):
         return self.__userID
     
@@ -25,10 +31,12 @@ class User:
         return self.__address
     
 
+
+
+    # Display functions
     def display_fine(self):
         print('Your total accumulated fines:', self.__fines)
     
-
     def display_reservedBooks(self):
         print('**Reserved Books**')
         if(len(self.__reservedBooks) == 0):
@@ -36,7 +44,6 @@ class User:
         else:
             for i in self.__reservedBooks:
                 print(i)
-
 
     def display_borrowedBooks(self):
         print("**Borrowed Books**")
@@ -46,10 +53,8 @@ class User:
             for book in self.__borrowedBooks:
                 print('Book Name:', book, end='\t')
                 self.__borrowedBooks[book].calculate_dueDate()
-
-
-    # Admin users can view certain user details for contact reasons
-    def admin_display(self):
+    
+    def display_info(self):
         print('**User Information**')
         print('Name:', self.__name)
         print('ID:', self.__userID)
@@ -60,6 +65,7 @@ class User:
         self.display_reservedBooks()
 
 
+    # Information update functions
     def change_password(self):
         check = input('Please enter your old password: ')
         if(check == self.__password):
@@ -67,7 +73,6 @@ class User:
         else:
             print('Unable to verify your identity, please visit IT department if you can not remember your password')
     
-
     def change_phoneNo(self):
         self.__phoneNo = input('Please enter your new phone number: ')
     
@@ -75,27 +80,70 @@ class User:
         self.__address = input('Please enter your new address: ')
     
 
-    # function to add borrowed book with its following transaction object which soters all transaction details
-    # and delete book from reserved list
-    # Transactions are created outside of the object
-    # the purpose of the following function is just to record borrowed books for the user
-    def borrow_book(self, book_name, transc_obj):
-        self.__borrowedBooks[book_name] = transc_obj
-        
-        if(book_name in self.__reservedBooks):
-            self.__reservedBooks.remove(book_name)
-    
-    
-    # function to add reserved book to list
-    def reserve_book(self, book_name):
-        self.__reservedBooks.append(book_name)
-    
-    
+
+
+    # Operation functions
+    # Function for the user to borrow a book
+    def borrow_book(self, book_name, transID, returningDate, lateFine):
+        if(book_name not in self.__linkBook):
+            print('Book not available in the library')
+
+        else:
+            book_ISBN = self.__linkBook[book_name]
+            book_obj = self.__library[book_ISBN]
+            
+            copies = book_obj.get_copies()                          # returns {'Copy ID' : Copy obj}
+            trans = -1                                              # transaction object is created once copy is available
+            
+            for copyID in copies:
+                if copies[copyID].get_status() == 'Available':      # if book is available, check is there is someone reservingt the book
+                    waitList = book_obj.get_waitlist()
+
+                    if(len(waitList) > 0):
+                        if(waitList[0] != self.__userID):
+                            waitList.append(self.__userID)
+                            self.__reservedBooks.append(book_name)
+                            print('Can not borrow the book, as the book is reserved.')
+                            print('You have been added to the waitlist')
+                        else:
+                            del waitList[0]
+                            self.__reservedBooks.remove(book_name)
+                    
+                    # book is available and not reserved, or it is the user's turn to borrow it
+                    trans = Transaction(transID, book_ISBN, copyID, self.__userID, returningDate, lateFine)
+                    copies[copyID].change_status('Borrowed', transID)
+                    self.__transactionLog[transID] = trans
+                    self.__borrowedBooks[book_name] = trans
+            
+
+            # no copies are availabe
+            if (trans == -1):
+                waitList.append(self.__userID)
+                self.__reservedBooks.append(book_name)
+                print('Can not borrow the book, as the book is reserved.')
+                print('You have been added to the waitlist')
+
     # function to return book and add fine
-    def return_book(self, book_name): 
-        self.__fines += self.__borrowedBooks[book_name].return_book()
+    def return_book(self, book_name):
+        trans_obj = self.__borrowedBooks[book_name]
+
         del self.__borrowedBooks[book_name]
-    
+        self.__fines += trans_obj.return_book()             # Function updates the fine according to returning date
+        
+        # change copy status
+        copyID = trans_obj.get_copyID()
+        book_ISBN = self.__linkBook[book_name]
+        book_obj = self.__library[book_ISBN]
+        book_copies = book_obj.get_copies()                 # {'Copy ID' : copy_obj}
+        book_copies[copyID].change_status('Available')
+
+    # function to check borrowed book due date
+    def check_DueDate(self, book_name):
+        if book_name in self.__borrowedBooks:
+            trans_obj = self.__borrowedBooks[book_name]
+            trans_obj.calculate_dueDate()
+        else:
+            print('Book was already returned')
 
     # function to pay fines
     def pay_fine(self):
@@ -107,25 +155,23 @@ class User:
             self.__fines -= payment_amount
 
 
-# Functions test
-# user = User(123, 'something', 'someone', '123456', 'Hawaii')
-# transaction = Transaction(1, '12345', '1', 123, date(2024, 9, 9), 2)
-# user.borrow_book('AGGGTM', transaction)
-# user.reserve_book('Yellow')
-# user.admin_display()
-# user.return_book('AGGGTM')
-# transaction.display_info()
-# user.admin_display()
 
 
-# class to define library member users
+
+
+
+# class to define library Member users
 class Member(User):
-    def __init__(self, ID, password, name, phone_no, address, membership_plan):
-        super().__init__(ID, password, name, phone_no, address)
+    def __init__(self, ID, password, name, phone_no, address, library, transaction_log, link_book, membership_plan):
+        super().__init__(ID, password, name, phone_no, address, library, transaction_log, link_book)
         self.__startDate = date.today()                                           # Membership Start date
         self.__endDate = date.today() + relativedelta(months=membership_plan)      # Calculates enddate according to membership plan
                                                                                   # Fees are expected to be paid instantly and not gradually
 
+
+
+
+    # Membership Functions 
     # function that prints how many days are left until
     # the membership expires
     def days_left(self):
@@ -140,21 +186,50 @@ class Member(User):
         self.__startDate = date.today()                                           
         self.__endDate = date.today() + relativedelta(years=membership_plan)
 
-    
-    # function that checks if membership is expired or not
-    # to ensure that user can proceed to borrow or reserve book
-    def check(self):
+
+
+
+    # Addition to borrow function to check whether membership is expired or not
+    # if it is expired, user can not borrow book
+    def borrow_book(self, book_name, transID, returningDate, lateFine):
         if(date.today() > self.__endDate):
-            return False
+            print('Membership has expired!')
+            print('Please renew your membership to be able to borrow books')
+        else:
+            super().borrow_book(book_name, transID, returningDate, lateFine)
     
 
-    def admin_display(self):
-        super().admin_display()
+
+
+    # Display Functions
+    def display_info(self):
+        super().display_info()
         print('Membership start date:', self.__startDate)
         print('Member end date:', self.__endDate)
+    
+    def view_books(self):
+        for book in self.__library:
+            self.__library[book].display_book_info()
+        
+        cop = input('Would you like to see available copies? y/n')
+        while (cop == 'y'):
+            book = input('Please enter book ISBN as displayed above')
+            self.library[book].display_copies()
+            cop = input('Would you like to see available copies? y/n')
 
 
-# Functions test
-# mem = Member(123, 'something', 'someone', '1234567', 'Hawaii', 12)
-# mem.days_left()
-# mem.admin_display()
+
+
+
+
+# class to define Admin users
+# Admins can add books to the library 
+# Remove Books, adds copies and remove copies
+# View User details except for other admins
+# View transaction log
+
+# Add Library and transaction log 
+
+# to change let user create transaction
+
+#### ADD ADMIN DISPLAY
