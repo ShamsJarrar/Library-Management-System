@@ -3,7 +3,7 @@ class Copy:
     def __init__(self, ID):
         self.__copyID = ID              # Book copy indetifier (string)
         self.__status = "Available"     # States whether book is borrowed or available
-        self.__transcID = "-1"          # If the book is borrowed, it connects it to a transaction
+        self.__transcID = -1            # If the book is borrowed, it connects it to a transaction
                                         # that contains all user details
     
     def get_copyID(self):

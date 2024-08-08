@@ -7,7 +7,7 @@ class Transaction:
         self.__bookISBN = bookID                # Information about the book involved in the transaction
         self.__bookCopyID = copyID
         self.__userID = userID                  # User ID involved in transaction
-        self.__borrowDate = date.today()               # the date the transation actually occured
+        self.__borrowDate = date.today()        # the date the transation actually occured
         self.__returningDate = returning_date   # the date the user is supposed to return the book
         self.__actual_returned_date = -1        # the date the user actually returned the book
         self.__fine = 0
@@ -51,6 +51,17 @@ class Transaction:
             print('Fine:', self.__fine)
     
 
+    #function to calculate how many days are left to return the borrowed book
+    def calculate_dueDate(self):
+        if(self.__status == 'Returned'):
+            print('Book was returned')
+        else:
+            if(date.today() < self.__returningDate):
+                print((self.__returningDate - date.today()).days, 'days left')
+            else:
+                print((date.today() - self.__returningDate).days, 'days overdue')
+    
+
     # function to change status of the transaction and calculate the fine for the user based
     # on the difference between the actual returningDate and the day the user was supposed to originall return
     # the function return the fine value so that it is changed also changed in the user's objects too
@@ -71,7 +82,8 @@ class Transaction:
 
 # Function Tests
 # transactions = {}
-# transactions[1] = Transaction(1, '12345', '1', '1111', date(2024, 9, 9), 2)
+# transactions[1] = Transaction(1, '12345', '1', 123, date(2024, 9, 9), 2)
 # transactions[1].display_info()
+# transactions[1].calculate_dueDate()
 # print(transactions[1].return_book())
 # print(transactions[1].get_status())

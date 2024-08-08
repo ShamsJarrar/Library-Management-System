@@ -16,3 +16,6 @@ transc_CNT = 0
 
 # Admin Interface
 # Member Interface
+
+# Transactions area created outside the user class to be saved in trasaction log
+# set library fine
