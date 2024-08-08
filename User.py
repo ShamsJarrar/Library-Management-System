@@ -1,5 +1,7 @@
+
 from Transactions import Transaction
 from datetime import date
+from dateutil.relativedelta import relativedelta
 
 class User:
     def __init__(self, ID, password, name, phone_no, address):
@@ -115,3 +117,44 @@ class User:
 # transaction.display_info()
 # user.admin_display()
 
+
+# class to define library member users
+class Member(User):
+    def __init__(self, ID, password, name, phone_no, address, membership_plan):
+        super().__init__(ID, password, name, phone_no, address)
+        self.__startDate = date.today()                                           # Membership Start date
+        self.__endDate = date.today() + relativedelta(months=membership_plan)      # Calculates enddate according to membership plan
+                                                                                  # Fees are expected to be paid instantly and not gradually
+
+    # function that prints how many days are left until
+    # the membership expires
+    def days_left(self):
+        if(date.today() <= self.__endDate):
+            print((self.__endDate - date.today()).days, 'days left until membership expires')
+        else:
+            print('Membership already Expired!')
+            print('Please renew your membership!')
+    
+    # function to renew memberhsip
+    def renew_membership(self, membership_plan):
+        self.__startDate = date.today()                                           
+        self.__endDate = date.today() + relativedelta(years=membership_plan)
+
+    
+    # function that checks if membership is expired or not
+    # to ensure that user can proceed to borrow or reserve book
+    def check(self):
+        if(date.today() > self.__endDate):
+            return False
+    
+
+    def admin_display(self):
+        super().admin_display()
+        print('Membership start date:', self.__startDate)
+        print('Member end date:', self.__endDate)
+
+
+# Functions test
+# mem = Member(123, 'something', 'someone', '1234567', 'Hawaii', 12)
+# mem.days_left()
+# mem.admin_display()
