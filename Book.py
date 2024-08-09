@@ -45,6 +45,13 @@ class Copy:
 
 
 
+
+
+
+
+
+
+
 # class that defines a book object to store all necessary book details
 class Book:
     def __init__(self, ISBN, title, author, publisher, edition, category):
@@ -67,6 +74,8 @@ class Book:
     def get_waitlist(self):
         return self.__waitlist
 
+    def get_name(self):
+        return self.__title
 
 
 
@@ -101,7 +110,6 @@ class Book:
     
     def remove_from_waitlist(self):
         del self.__waitlist[0]
-    
 
 
 
@@ -125,6 +133,13 @@ class Book:
         for key in self.__copies:
             self.__copies[key].admin_display()
     
+    #function to print waitlist for admins
+    def display_waitList(self):
+        cnt = 1
+        for user in self.__waitlist:
+            print(cnt, '.', user)
+            cnt += 1
+
 
 
 

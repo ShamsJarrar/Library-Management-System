@@ -4,7 +4,8 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 class User:
-    def __init__(self, ID, password, name, phone_no, address, library, transaction_log, link_book):
+    def __init__(self, ID, password, name, phone_no, address, library, 
+                 transaction_log, link_book):
         self.__userID = ID                          # generated integer once account is created
         self.__password = password                  # string entered by the user
         self.__name = name
@@ -101,12 +102,12 @@ class User:
 
                     if(len(waitList) > 0):
                         if(waitList[0] != self.__userID):
-                            waitList.append(self.__userID)
+                            book_obj.add_waitlist(self.__userID)
                             self.__reservedBooks.append(book_name)
                             print('Can not borrow the book, as the book is reserved.')
                             print('You have been added to the waitlist')
                         else:
-                            del waitList[0]
+                            book_obj.remove_from_waitlist()
                             self.__reservedBooks.remove(book_name)
                     
                     # book is available and not reserved, or it is the user's turn to borrow it
@@ -162,10 +163,11 @@ class User:
 
 # class to define library Member users
 class Member(User):
-    def __init__(self, ID, password, name, phone_no, address, library, transaction_log, link_book, membership_plan):
+    def __init__(self, ID, password, name, phone_no, address, library, 
+                 transaction_log, link_book, membership_plan):
         super().__init__(ID, password, name, phone_no, address, library, transaction_log, link_book)
         self.__startDate = date.today()                                           # Membership Start date
-        self.__endDate = date.today() + relativedelta(months=membership_plan)      # Calculates enddate according to membership plan
+        self.__endDate = date.today() + relativedelta(months=membership_plan)     # Calculates enddate according to membership plan
                                                                                   # Fees are expected to be paid instantly and not gradually
 
 
@@ -222,14 +224,84 @@ class Member(User):
 
 
 
-# class to define Admin users
-# Admins can add books to the library 
-# Remove Books, adds copies and remove copies
+# Class to define Admin users
+# Admins can add and remove books to the library 
+# Adds copies and remove copies
 # View User details except for other admins
 # View transaction log
 
-# Add Library and transaction log 
+# Admins can also borrow, reserve and return books
 
-# to change let user create transaction
+# for employee details, the feature can be added later for HR team
+# to be able to add employee salary, start date, and all employee details
+# but for this class, it is for library and member management
+class Admin(User):
+    def __init__(self, ID, password, name, phone_no, address, library, 
+                 transaction_log, link_book):
+        super().__init__(ID, password, name, phone_no, address, library, 
+                 transaction_log, link_book) 
+    
 
-#### ADD ADMIN DISPLAY
+
+
+    # Book Copy Update operations
+    def add_copy(self, book_ISBN, copy_id):
+        book_obj = self.__library[book_ISBN]                        # self.__library = {'Book ISBN': book_obj}
+        book_obj.add_copy(copy_id)
+
+    def remove_copy(self, book_ISBN, copy_id):
+        book_obj = self.__library[book_ISBN]
+        book_obj.delete_copy(copy_id)
+
+        if(len(book_obj.get_copies()) == 0):                        # if all copies were deleted, then
+            book_name = self.__library[book_ISBN].get_name()        # the book isn't available anymore
+            del self.__library[book_ISBN]                           # so it is deleted from library book list
+            del self.__linkBook[book_name]
+
+
+
+
+    # Book Update operations
+    def add_book(self, ISBN, title, author, publisher, edition, category, copy_id):
+        if(ISBN in self.__library):
+            print('The book is already in the library')
+        else:
+            new_book = Book(ISBN, title, author, publisher, edition, category)
+            new_book.add_copy(copy_id)
+            self.__library[ISBN] = new_book
+            self.__linkBook[title] = ISBN
+
+
+    def remove_book(self, book_ISBN):
+        book_name = self.__library[book_ISBN].get_name()        
+        del self.__library[book_ISBN]                           
+        del self.__linkBook[book_name]
+
+
+
+
+    # Display Functions
+    # Function to display member info for tracking purposes
+    # User object is passed 
+    def member_info(self, user_obj):                  
+        user_obj.display_info()
+    
+    def view_books(self):
+        for book in self.__library:
+            self.__library[book].display_book_info()
+        
+        cop = input('Would you like to see available copies? y/n')
+        while (cop == 'y'):
+            book = input('Please enter book ISBN as displayed above')
+            self.library[book].admin_display_copies()
+            cop = input('Would you like to see available copies? y/n') 
+
+    def view_transaction_log(self):
+        for transID in self.__transactionLog:               # {Transc ID: trans_obj}
+            print("*****************************")
+            self.__transactionLog[transID].display_info()
+    
+    def view_waitList(self, book_ISBN):
+        book_obj = self.__library[book_ISBN]
+        book_obj.display_waitList()
+
