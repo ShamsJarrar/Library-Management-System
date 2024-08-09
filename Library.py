@@ -9,8 +9,8 @@ user = {}               # {User #ID: ['password', 'admin/member', user_obj]}
 transaction_log = {}    # {Transc ID: trans_obj}
 
 # counters to generate userIDs and transc IDS
-userID_CNT = 0
-transc_CNT = 0
+userID_CNT = 1
+transc_CNT = 1
 
 # Add user login/Sign up
 

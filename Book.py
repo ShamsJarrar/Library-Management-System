@@ -8,7 +8,7 @@ class Copy:
     
 
 
-    # Getter functions
+    # Getter Functions
     def get_copyID(self):
         return self.__copyID
     
@@ -19,15 +19,11 @@ class Copy:
         return self.__transcID
     
 
-
-
-    # Update functions
-    # Function to change book status
-    def change_status(self, new_status, transID = '-1'):    
+    # Update Functions
+    # Function to change book status through new_status = Available or Borrowed
+    def change_status(self, new_status, transID = -1):        # If Borrowed, transID is given
         self.__status = new_status
         self.__transcID = transID
-
-
 
 
     # Display Functions
@@ -55,7 +51,7 @@ class Copy:
 # class that defines a book object to store all necessary book details
 class Book:
     def __init__(self, ISBN, title, author, publisher, edition, category):
-        self.__ISBN = ISBN              # Book's ISBN string
+        self.__ISBN = ISBN              # Book's ISBN (string)
         self.__title = title
         self.__author = author    
         self.__publisher = publisher
@@ -66,8 +62,7 @@ class Book:
     
 
 
-
-    # Getter functions
+    # Getter Functions
     def get_copies(self):
         return self.__copies
     
@@ -79,14 +74,14 @@ class Book:
 
 
 
-    # Update Copy functions
+    # Update Copy Functions
     # function that takes a string of the new copy's ID and adds it to copies dictionary
     def add_copy(self, copy_id):
         if(copy_id in self.__copies):
             print("Copy is already added to the system")
         self.__copies[copy_id] = Copy(copy_id)
     
-    # function that takes a string of the copy if to be delete
+    # function that takes a string of the copyID if to be deleted
     def delete_copy(self, copy_id): 
         if(copy_id not in self.__copies):
             print("Copy is already not in the system")
@@ -97,14 +92,12 @@ class Book:
         del self.__copies[copy_id]
 
     # function that changes copy status if borrowed or returned by taking strings
-    def change_copy_status(self, copy_id, new_status, trans_id = '-1'):
+    def change_copy_status(self, copy_id, new_status, trans_id = -1):
         self.__copies[copy_id].change_status(new_status, trans_id)
-    
     
 
 
     # Update waitlist functions
-    # function to add to waitlist
     def add_waitlist(self, userID):
         self.__waitlist.append(userID)
     
@@ -139,6 +132,8 @@ class Book:
         for user in self.__waitlist:
             print(cnt, '.', user)
             cnt += 1
+        if len(self.__waitlist) == 0:
+            print('Waitlist is empty!')
 
 
 
@@ -149,10 +144,14 @@ class Book:
 # books['12345'].add_copy('1')
 # books['12345'].add_copy('2')
 # books['12345'].add_copy('3')
-# books['12345'].change_copy_status('1', 'Borrowed', '0001')
+# books['12345'].change_copy_status('1', 'Borrowed', 1)
 # books['12345'].delete_copy('3')
 # books['12345'].display_book_info()
 # print('Member display')
 # books['12345'].display_copies()
 # print('Admin display')
 # books['12345'].admin_display_copies()
+# books['12345'].add_waitlist(555)
+# books['12345'].display_waitList()
+# books['12345'].remove_from_waitlist()
+# books['12345'].display_waitList()

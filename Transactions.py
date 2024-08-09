@@ -2,26 +2,26 @@ from datetime import date
 
 # object to save transaction details
 # when transaction occurs, other functions change the status of the copy of the book
-# the purpose of the class is the log all transactions
+# the purpose of the class is to log all transactions
 # and connect user details with book details and transaction details
 # and to be able to calculate fines
 class Transaction:
     def __init__(self, ID, bookID, copyID, userID, returning_date, late_fine):
-        self.__ID = ID                          # integer to specify transaction ID
-        self.__bookISBN = bookID                # Information about the book involved in the transaction
-        self.__bookCopyID = copyID
-        self.__userID = userID                  # User ID involved in transaction
+        self.__ID = ID                          # (int)
+        self.__bookISBN = bookID                # Information about the book involved in the transaction (string)
+        self.__bookCopyID = copyID              # (string)
+        self.__userID = userID                  # User ID involved in transaction (int)
         self.__borrowDate = date.today()        # the date the transation actually occured
         self.__returningDate = returning_date   # the date the user is supposed to return the book
         self.__actual_returned_date = -1        # the date the user actually returned the book
         self.__fine = 0
         self.__status = 'Borrow'
-        self.__fineValue = late_fine            # factor to multiply with for every late day
+        self.__fineValue = late_fine            # factor to multiply with for every late day, set by admins
     
 
 
 
-    # Getter functions
+    # Getter Functions
     def get_ID(self):
         return self.__ID
     
@@ -42,9 +42,7 @@ class Transaction:
     
 
 
-
-    # Diplay functions
-    # this function is for displaying info for admins for purposes of tracking
+    # Display Functions
     def display_info(self):
         print('Transaction ID:', self.__ID)
         print('Book ISBN:', self.__bookISBN)
@@ -59,7 +57,6 @@ class Transaction:
     
 
 
-
     # Operations
     # function to calculate how many days are left to return the borrowed book
     def calculate_dueDate(self):
@@ -72,8 +69,8 @@ class Transaction:
                 print((date.today() - self.__returningDate).days, 'days overdue')
     
     # function to change status of the transaction and calculate the fine for the user based
-    # on the difference between the actual returningDate and the day the user was supposed to originall return
-    # the function return the fine value so that it is changed also changed in the user's objects too
+    # on the difference between the actual returningDate and the day the user was supposed to original return
+    # the function returns the fine value so that it is changed also changed in the user's objects too
     def return_book(self):
         self.__status = 'Returned'
         self.__actual_returned_date = date.today()
