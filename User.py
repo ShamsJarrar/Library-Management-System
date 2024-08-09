@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 class User:
     def __init__(self, ID, password, name, phone_no, address, library, 
                  transaction_log, link_book):
-        self.__userID = ID                          # generated integer once account is created
+        self.__userID = ID                          # string entered by the user
         self.__password = password                  # string entered by the user
         self.__name = name
         self.__phoneNo = phone_no                   # since it is a local library, the phone number format is unified (string)
@@ -106,6 +106,7 @@ class User:
                             self._reservedBooks.append(book_name)
                             print('Can not borrow the book, as the book is reserved.')
                             print('You have been added to the waitlist')
+                            break
                         else:
                             book_obj.remove_from_waitlist()
                             self._reservedBooks.remove(book_name)
@@ -115,6 +116,7 @@ class User:
                     copies[copyID].change_status('Borrowed', transID)
                     self._transactionLog[transID] = trans
                     self._borrowedBooks[book_name] = trans
+                    break
             
 
             # no copies are availabe
@@ -126,6 +128,10 @@ class User:
 
     # function to return book and add fine
     def return_book(self, book_name):
+        if(book_name not in self._borrowedBooks):
+            print('Book was not borrowed')
+            return
+        
         trans_obj = self._borrowedBooks[book_name]
 
         del self._borrowedBooks[book_name]
@@ -135,11 +141,16 @@ class User:
         copyID = trans_obj.get_copyID()
         book_ISBN = self._linkBook[book_name]
         book_obj = self._library[book_ISBN]
-        book_copies = book_obj.get_copies()                 # {'Copy ID' : copy_obj}
-        book_copies[copyID].change_status('Available')
+        book_obj.change_copy_status(copyID, 'Available')
+
+        print('Book has been returned')
 
     # function to check borrowed book due date
     def check_DueDate(self, book_name):
+        if(book_name not in self._borrowedBooks):
+            print('Book was not borrowed')
+            return
+        
         if book_name in self._borrowedBooks:
             trans_obj = self._borrowedBooks[book_name]
             trans_obj.calculate_dueDate()
@@ -153,6 +164,10 @@ class User:
         else:
             print('Total accumulated fines:', self.__fines)
             payment_amount = float(input('Please enter the amount you want to pay '))
+            if(payment_amount > self._fines):
+                print('You are paying much more than the intended amount')
+                return
+            
             self._fines -= payment_amount
 
 
@@ -208,12 +223,20 @@ class Member(User):
         print('Member end date:', self.__endDate)
     
     def view_books(self):
+        if len(self._library) == 0:
+            print('Library is empty!')
+            return
+        
         for book in self._library:
             self._library[book].display_book_info()
         
         cop = input('Would you like to see available copies? y/n')
         while (cop == 'y'):
             book = input('Please enter book ISBN as displayed above')
+            if(book not in self._library):
+                print('Wrong ISBN')
+                continue
+
             self._library[book].display_copies()
             cop = input('Would you like to see available copies? y/n')
 
@@ -235,22 +258,37 @@ class Member(User):
 # but for this class, it is for library and member management
 class Admin(User):
     def __init__(self, ID, password, name, phone_no, address, library, 
-                 transaction_log, link_book):
+                 transaction_log, link_book, user):
         super().__init__(ID, password, name, phone_no, address, library, 
                  transaction_log, link_book) 
+        self.__users = user                          # {'User #ID': ['password', 'admin/member', user_obj]}
     
 
 
     # Book Copy Update operations
     def add_copy(self, book_ISBN, copy_id):
+        if (book_ISBN not in self._library):
+            print('Invalid ISBN')
+            return
         book_obj = self._library[book_ISBN]                        # self.__library = {'Book ISBN': book_obj}
         book_obj.add_copy(copy_id)
+        print('Copy has been added')
 
     def remove_copy(self, book_ISBN, copy_id):
-        book_obj = self._library[book_ISBN]
-        book_obj.delete_copy(copy_id)
+        if(book_ISBN not in self._library):
+            print('Book does not exist')
+            return
 
-        if(len(book_obj.get_copies()) == 0):                        # if all copies were deleted, then
+        book_obj = self._library[book_ISBN]
+        copies = book_obj.get_copies()
+        if(copy_id not in copies):
+            print('Copy ID does not exist')
+            return
+        
+        book_obj.delete_copy(copy_id)
+        print('Copy has been removed')
+
+        if(len(copies) == 0):                                      # if all copies were deleted, then
             book_name = self._library[book_ISBN].get_name()        # the book isn't available anymore
             del self._library[book_ISBN]                           # so it is deleted from library book list
             del self._linkBook[book_name]
@@ -266,40 +304,70 @@ class Admin(User):
             new_book.add_copy(copy_id)
             self._library[ISBN] = new_book
             self._linkBook[title] = ISBN
+        
+        print(f'{title} has been successfully added to the library')
 
 
     def remove_book(self, book_ISBN):
+        if(book_ISBN not in self._library):
+            print('Book is already not in the library')
+            return
+        
         book_name = self._library[book_ISBN].get_name()        
         del self._library[book_ISBN]                           
         del self._linkBook[book_name]
+        print('Book has been removed')
 
 
 
     # Display Functions
     # Function to display member info for tracking purposes
     # User object is passed 
-    def member_info(self, user_obj):                  
+    def member_info(self, user_ID):
+        if(self.__users[user_ID][1] == 'ADMIN'):
+            print('Can not access other admins info')
+            return
+        
+        if(user_ID not in self.__users):
+            print('User ID not found')
+            return
+
+        user_obj = self.__users[user_ID][2]          
         user_obj.display_info()
     
     def view_books(self):
+        if len(self._library) == 0:
+            print('Library is empty!')
+            return
+
         for book in self._library:
             self._library[book].display_book_info()
         
         cop = input('Would you like to see available copies? y/n ')
         while (cop == 'y'):
             book = input('Please enter book ISBN as displayed above ')
+
             if(book in self._library):
                 self._library[book].admin_display_copies()
             else:
                 print('Book is not available in the library!')
+            
             cop = input('Would you like to see available copies? y/n ') 
 
     def view_transaction_log(self):
+        if(len(self._transactionLog) == 0):
+            print('No transactions have been done yet!')
+            return
+        
         for transID in self._transactionLog:               # {Transc ID: trans_obj}
             print("*****************************")
             self._transactionLog[transID].display_info()
     
     def view_waitList(self, book_ISBN):
+        if(book_ISBN not in self._library):
+            print('Book not available in library')
+            return
+        
         book_obj = self._library[book_ISBN]
         book_obj.display_waitList()
 
@@ -313,11 +381,12 @@ class Admin(User):
 # user = {}                   # {User #ID: ['password', 'admin/member', user_obj]}
 # transaction_log = {}        # {Transc ID: trans_obj}
 
+# temporarily, there are set as counters for testing
 # userID_CNT = 1
 # transc_CNT = 1
 
 # # the information is taken from the user
-# admin1 = Admin(userID_CNT, 'PASSWORD', 'Jason', '+962 999999', 'Amman', books, transaction_log, link_book)
+# admin1 = Admin(userID_CNT, 'PASSWORD', 'Jason', '+962 999999', 'Amman', books, transaction_log, link_book, user)
 # user[userID_CNT] = ['PASSWORD', 'ADMIN', admin1]
 # userID_CNT += 1
 
@@ -352,7 +421,7 @@ class Admin(User):
 # admin1.display_info()
 # print()
 # print("Admin 1 viewing member1's info")
-# admin1.member_info(member1)
+# admin1.member_info(2)
 
 # print()
 # print('Viewing books after reserving them')

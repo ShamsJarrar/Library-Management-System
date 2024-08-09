@@ -93,6 +93,9 @@ class Book:
 
     # function that changes copy status if borrowed or returned by taking strings
     def change_copy_status(self, copy_id, new_status, trans_id = -1):
+        if (copy_id not in self.__copies):
+            print('Wrong copy ID!')
+            return
         self.__copies[copy_id].change_status(new_status, trans_id)
     
 

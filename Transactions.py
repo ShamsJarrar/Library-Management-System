@@ -10,7 +10,7 @@ class Transaction:
         self.__ID = ID                          # (int)
         self.__bookISBN = bookID                # Information about the book involved in the transaction (string)
         self.__bookCopyID = copyID              # (string)
-        self.__userID = userID                  # User ID involved in transaction (int)
+        self.__userID = userID                  # User ID involved in transaction (string)
         self.__borrowDate = date.today()        # the date the transation actually occured
         self.__returningDate = returning_date   # the date the user is supposed to return the book
         self.__actual_returned_date = -1        # the date the user actually returned the book
