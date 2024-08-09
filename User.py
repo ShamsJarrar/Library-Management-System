@@ -97,18 +97,23 @@ class User:
             trans = -1                                              # transaction object is created once copy is available
             
             for copyID in copies:
-                if copies[copyID].get_status() == 'Available':      # if the book is available, check if there is someone reserving the book
+                if copies[copyID].get_status() == 'Available':      
                     waitList = book_obj.get_waitlist()
 
-                    if(len(waitList) > 0):
+                    if(len(waitList) > 0):                                                  # if the book is available, check if there is someone reserving the book
                         if(waitList[0] != self.__userID):
-                            book_obj.add_waitlist(self.__userID)
-                            self._reservedBooks.append(book_name)
-                            print('Can not borrow the book, as the book is reserved.')
-                            print('You have been added to the waitlist')
+                            if(book_name in self._reservedBooks):                           # It means the user has already reserved the book previously
+                                print('Book has already been previously reserved by you')   
+                                print('The book is still not available')
+                            else:
+                                book_obj.add_waitlist(self.__userID)
+                                self._reservedBooks.append(book_name)
+                                print('Can not borrow the book, as the book is reserved.')
+                                print('You have been added to the waitlist')
+                            
                             break
                         else:
-                            book_obj.remove_from_waitlist()
+                            book_obj.remove_from_waitlist(self.__userID)
                             self._reservedBooks.remove(book_name)
                     
                     # book is available and not reserved, or it is the user's turn to borrow it
@@ -121,10 +126,14 @@ class User:
 
             # no copies are availabe
             if (trans == -1):
-                book_obj.add_waitlist(self.__userID)
-                self._reservedBooks.append(book_name)
-                print('Can not borrow the book, as the book is reserved.')
-                print('You have been added to the waitlist')
+                if(book_name in self._reservedBooks):
+                    print('Book has already been previously reserved by you.')
+                    print('The book is still not available')
+                else:
+                    book_obj.add_waitlist(self.__userID)
+                    self._reservedBooks.append(book_name)
+                    print('Can not borrow the book, as the book is reserved.')
+                    print('You have been added to the waitlist')
 
     # function to return book and add fine
     def return_book(self, book_name):
@@ -157,6 +166,35 @@ class User:
         else:
             print('Book was already returned')
 
+    def reserve_book(self, book_name):
+        if(book_name in self._reservedBooks):
+            print('Book has already been previously reserved by you')
+
+        else:
+            book_ISBN = self._linkBook[book_name]
+            book_obj = self._library[book_ISBN]
+
+            if len(book_obj.get_waitlist()) == 0:
+                copies = book_obj.get_copies()
+                for copy in copies:
+                    if copies[copy].get_status() == 'Available':
+                        print('There is a copy available, no need to reserve')
+                        return
+
+            book_obj.add_waitlist(self.__userID)
+            self._reservedBooks.append(book_name)
+    
+    def delete_reservation(self, book_name):
+        if(book_name not in self._reservedBooks):
+            print('Book was not reserved by you')
+
+        else:
+            book_ISBN = self._linkBook[book_name]
+            book_obj = self._library[book_ISBN]
+
+            book_obj.remove_from_waitlist(self.__userID)
+            self._reservedBooks.remove(book_name)
+
     # function to pay fines
     def pay_fine(self):
         if(self._fines == 0):
@@ -169,6 +207,9 @@ class User:
                 return
             
             self._fines -= payment_amount
+
+    
+
 
 
 
@@ -207,15 +248,16 @@ class Member(User):
 
     # Addition to borrow function to check whether membership is expired or not
     # if it is expired, user can not borrow book
+    # and to view books
     def borrow_book(self, book_name, transID, returningDate, lateFine):
+        self.view_books()
         if(date.today() > self.__endDate):
             print('Membership has expired!')
             print('Please renew your membership to be able to borrow books')
         else:
             super().borrow_book(book_name, transID, returningDate, lateFine)
     
-
-
+    
     # Display Functions
     def display_info(self):
         super().display_info()
@@ -230,15 +272,15 @@ class Member(User):
         for book in self._library:
             self._library[book].display_book_info()
         
-        cop = input('Would you like to see available copies? y/n')
+        cop = input('Would you like to see available copies? y/n ')
         while (cop == 'y'):
-            book = input('Please enter book ISBN as displayed above')
+            book = input('Please enter book ISBN as displayed above ')
             if(book not in self._library):
                 print('Wrong ISBN')
                 continue
 
             self._library[book].display_copies()
-            cop = input('Would you like to see available copies? y/n')
+            cop = input('Would you like to see available copies? y/n ')
 
 
 
@@ -285,6 +327,10 @@ class Admin(User):
             print('Copy ID does not exist')
             return
         
+        if(copies[copy_id].get_status() == 'Borrowed'):
+            print('Copy is borrowed! Can not delete')
+            return
+
         book_obj.delete_copy(copy_id)
         print('Copy has been removed')
 
@@ -292,6 +338,7 @@ class Admin(User):
             book_name = self._library[book_ISBN].get_name()        # the book isn't available anymore
             del self._library[book_ISBN]                           # so it is deleted from library book list
             del self._linkBook[book_name]
+            print('Book has been removed, as no more copies are left')
 
 
 
@@ -309,14 +356,14 @@ class Admin(User):
 
 
     def remove_book(self, book_ISBN):
-        if(book_ISBN not in self._library):
+        if(book_ISBN not in self._library):                     
             print('Book is already not in the library')
             return
         
-        book_name = self._library[book_ISBN].get_name()        
-        del self._library[book_ISBN]                           
-        del self._linkBook[book_name]
-        print('Book has been removed')
+        copies = self._library[book_ISBN].get_copies()              # The function calls remove copy function
+        for copy in copies:                                         # to delete all copies (memory optimization)
+            self.remove_copy(book_ISBN, copy)                       # and to check if no copies are currently borrowed
+                                                                    # as book can not be removed from the system if there are borrowed copies
 
 
 
@@ -341,7 +388,9 @@ class Admin(User):
             return
 
         for book in self._library:
+            print("******************************")
             self._library[book].display_book_info()
+            print()
         
         cop = input('Would you like to see available copies? y/n ')
         while (cop == 'y'):
@@ -352,6 +401,7 @@ class Admin(User):
             else:
                 print('Book is not available in the library!')
             
+            print()
             cop = input('Would you like to see available copies? y/n ') 
 
     def view_transaction_log(self):
@@ -370,6 +420,7 @@ class Admin(User):
         
         book_obj = self._library[book_ISBN]
         book_obj.display_waitList()
+
 
 
 

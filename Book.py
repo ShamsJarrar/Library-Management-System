@@ -83,12 +83,6 @@ class Book:
     
     # function that takes a string of the copyID if to be deleted
     def delete_copy(self, copy_id): 
-        if(copy_id not in self.__copies):
-            print("Copy is already not in the system")
-        
-        if(self.__copies[copy_id].get_status == 'Borrowed'):
-            print('Can not delete copy because it is borrowed')
-        
         del self.__copies[copy_id]
 
     # function that changes copy status if borrowed or returned by taking strings
@@ -104,8 +98,8 @@ class Book:
     def add_waitlist(self, userID):
         self.__waitlist.append(userID)
     
-    def remove_from_waitlist(self):
-        del self.__waitlist[0]
+    def remove_from_waitlist(self, user_ID):
+        self.__waitlist.remove(user_ID)
 
 
 
@@ -133,7 +127,7 @@ class Book:
     def display_waitList(self):
         cnt = 1
         for user in self.__waitlist:
-            print(cnt, '.', user)
+            print(cnt, '.', user, 'user')
             cnt += 1
         if len(self.__waitlist) == 0:
             print('Waitlist is empty!')
@@ -156,5 +150,5 @@ class Book:
 # books['12345'].admin_display_copies()
 # books['12345'].add_waitlist(555)
 # books['12345'].display_waitList()
-# books['12345'].remove_from_waitlist()
+# books['12345'].remove_from_waitlist(555)
 # books['12345'].display_waitList()

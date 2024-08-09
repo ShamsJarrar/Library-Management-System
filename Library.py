@@ -113,7 +113,7 @@ def Admin_menu(user_obj):
             Access(user_obj)
         
         elif f == 3:
-            Account(user_obj)
+            Admin_Account(user_obj)
 
     
     print('GOOD BYE!')
@@ -135,7 +135,7 @@ def Member_menu(user_obj):
             Access(user_obj)
         
         elif f == 2:
-            Account(user_obj)
+            Member_Account(user_obj)
 
     print('GOOD BYE!')
 
@@ -209,18 +209,20 @@ def Library_Management(user_obj):
 
 def Access(user_obj):
     option = -1
-    while (option != 10):
+    while (option != 12):
         print('******************Library Access******************')
         print('1. View Books')
         print('2. Borrow Book')
         print('3. Return Book')
-        print('4. Check Book Due Date')
-        print('5. Pay fines')
-        print('6. View fines')
-        print('7. View Reserved Books')
-        print('8. View Borrowed Books')
-        print('9. My information')
-        print('10. Exit')
+        print('4. Reserve Book')
+        print('5. Delete Book Reservation')
+        print('6. Check Book Due Date')
+        print('7. Pay fines')
+        print('8. View fines')
+        print('9. View Reserved Books')
+        print('10. View Borrowed Books')
+        print('11. My information')
+        print('12. Exit')
 
         option = int(input('Please enter the number that indicated the option you want to proceed with '))
         print()
@@ -230,6 +232,7 @@ def Access(user_obj):
             print()
 
         elif option == 2:
+            user_obj.view_books()
             print('Please enter the following information: ')
             book_name = input('Please enter book name as listed in library ')
             print('Please enter date you intend on returning the book: ')
@@ -254,30 +257,41 @@ def Access(user_obj):
         
 
         elif option  == 3:
+            user_obj.display_borrowedBooks()
             book_name = input('Please enter book name as listed in library ')
             user_obj.return_book(book_name)
         
         elif option == 4:
+            user_obj.view_books()
+            book_name = input('Please enter book name as listed in library ')
+            user_obj.reserve_book(book_name)
+
+        elif option == 5:
+            user_obj.display_reservedBooks()
+            book_name = input('Please enter book name as listed in library ')
+            user_obj.delete_reservation(book_name)
+
+        elif option == 6:
             book_name = input('Please enter book name as listed in library ')
             user_obj.check_DueDate(book_name)
         
-        elif option == 5:
+        elif option == 7:
             user_obj.pay_fine()
         
-        elif option == 6:
+        elif option == 8:
             user_obj.display_fine()
         
-        elif option == 7:
+        elif option == 9:
             user_obj.display_reservedBooks()
         
-        elif option == 8:
+        elif option == 10:
             user_obj.display_borrowedBooks()
         
-        elif option == 9:
+        elif option == 11:
             user_obj.display_info()
 
 
-def Account(user_obj):
+def Admin_Account(user_obj):
     option = -1
     while (option != 4):
         print('******************Account Setting******************')
@@ -298,6 +312,36 @@ def Account(user_obj):
         elif option == 3:
             user_obj.change_address()
 
+
+def Member_Account(user_obj):
+    option = -1
+    while (option != 6):
+        print('******************Account Setting******************')
+        print("1. Change Password")
+        print("2. Change Registered Phone Number")
+        print("3. Change Registered Address")
+        print("4. Days Left until Membership Expires")
+        print("5. Renew Membership")
+        print("6. Exit")
+    
+        option = int(input('Please enter the number that indicated the option you want to proceed with '))
+        print()
+
+        if option == 1:
+            user_obj.change_password()
+        
+        elif option == 2:
+            user_obj.change_phoneNo()
+        
+        elif option == 3:
+            user_obj.change_address()
+        
+        elif option == 4:
+            user_obj.days_left()
+        
+        elif option == 5:
+            membership_plan = int(input('How many months do you want to join for (membership plan): '))
+            user_obj.renew_membership(membership_plan)
 
 
 
