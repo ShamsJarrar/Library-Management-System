@@ -352,6 +352,7 @@ class Admin(User):
     def add_book(self, ISBN, title, author, publisher, edition, category, copy_id):
         if(ISBN in self._library):
             print('The book is already in the library')
+            return
         else:
             new_book = Book(ISBN, title, author, publisher, edition, category)
             new_book.add_copy(copy_id)
