@@ -31,6 +31,8 @@ class User:
     def get_address(self):
         return self.__address
     
+    def get_password(self):
+        return self.__password
 
 
 
@@ -71,6 +73,7 @@ class User:
         check = input('Please enter your old password: ')
         if(check == self.__password):
             self.__password = input('Please enter your new password: ')
+
         else:
             print('Unable to verify your identity, please visit IT department if you can not remember your password')
     
@@ -104,7 +107,8 @@ class User:
                         if(waitList[0] != self.__userID):
                             if(book_name in self._reservedBooks):                           # It means the user has already reserved the book previously
                                 print('Book has already been previously reserved by you')   
-                                print('The book is still not available')
+                                print('Your turn has not come yet in the waitlist!')
+                                return
                             else:
                                 book_obj.add_waitlist(self.__userID)
                                 self._reservedBooks.append(book_name)
@@ -242,7 +246,7 @@ class Member(User):
     # function to renew memberhsip
     def renew_membership(self, membership_plan):
         self.__startDate = date.today()                                           
-        self.__endDate = date.today() + relativedelta(years=membership_plan)
+        self.__endDate = date.today() + relativedelta(months=membership_plan)
 
 
 
@@ -250,7 +254,6 @@ class Member(User):
     # if it is expired, user can not borrow book
     # and to view books
     def borrow_book(self, book_name, transID, returningDate, lateFine):
-        self.view_books()
         if(date.today() > self.__endDate):
             print('Membership has expired!')
             print('Please renew your membership to be able to borrow books')
@@ -270,16 +273,19 @@ class Member(User):
             return
         
         for book in self._library:
+            print("******************************")
             self._library[book].display_book_info()
+            print()
         
         cop = input('Would you like to see available copies? y/n ')
         while (cop == 'y'):
             book = input('Please enter book ISBN as displayed above ')
-            if(book not in self._library):
+            if(book in self._library):
+                self._library[book].display_copies()
+            else:
                 print('Wrong ISBN')
-                continue
-
-            self._library[book].display_copies()
+                
+            print()
             cop = input('Would you like to see available copies? y/n ')
 
 
@@ -303,7 +309,7 @@ class Admin(User):
                  transaction_log, link_book, user):
         super().__init__(ID, password, name, phone_no, address, library, 
                  transaction_log, link_book) 
-        self.__users = user                          # {'User #ID': ['password', 'admin/member', user_obj]}
+        self.__users = user                          # {'User #ID': ['admin/member', user_obj]}
     
 
 
@@ -360,10 +366,15 @@ class Admin(User):
             print('Book is already not in the library')
             return
         
-        copies = self._library[book_ISBN].get_copies()              # The function calls remove copy function
-        for copy in copies:                                         # to delete all copies (memory optimization)
-            self.remove_copy(book_ISBN, copy)                       # and to check if no copies are currently borrowed
-                                                                    # as book can not be removed from the system if there are borrowed copies
+        copies = self._library[book_ISBN].get_copies()                          
+        for copy in copies:
+            if(copies[copy].get_status() == 'Borrowed'):                        # checks is there is a borrowed copy or not
+                print('There is a copy borrowed! Book can not be deleted')      # if there is, book can not be deleted from the system
+                return
+        
+        del self._library[book_ISBN]
+        print('Book has been deleted \n')                
+                                                                    
 
 
 
@@ -371,7 +382,7 @@ class Admin(User):
     # Function to display member info for tracking purposes
     # User object is passed 
     def member_info(self, user_ID):
-        if(self.__users[user_ID][1] == 'ADMIN'):
+        if(self.__users[user_ID][0] == 'ADMIN'):
             print('Can not access other admins info')
             return
         
@@ -379,7 +390,7 @@ class Admin(User):
             print('User ID not found')
             return
 
-        user_obj = self.__users[user_ID][2]          
+        user_obj = self.__users[user_ID][1]          
         user_obj.display_info()
     
     def view_books(self):

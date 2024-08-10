@@ -4,7 +4,7 @@ import random
 # Global Variables for use throughout the program
 library = {}                # {'Book ISBN': book_obj} -> waitlist consists of user IDs inside the object
 link_book = {}              # {'Book Name': 'Book ISBN'}, helps find book ISBN if search was done through book's name
-user = {}                   # {'UserID': ['password', 'ADMIN/MEMBER', user_obj]}
+user = {}                   # {'UserID': ['ADMIN/MEMBER', user_obj]}
 transaction_log = {}        # {Transc ID: trans_obj}, transaction ID is generated randomly
 lateFine = 2                # Number set by library as the standard fine for every late day
 
@@ -49,7 +49,7 @@ def Sign_Up():
         new_admin = Admin(user_ID, password, name, phone_no, address, library, 
                  transaction_log, link_book, user)
         
-        user[user_ID] = [password, 'ADMIN', new_admin]
+        user[user_ID] = ['ADMIN', new_admin]
         print('You have successfully registered, please proceed to Login page')
 
 
@@ -69,7 +69,7 @@ def Sign_Up():
         new_member = Member(user_ID, password, name, phone_no, address, library, 
                  transaction_log, link_book, membership_plan)
         
-        user[user_ID] = [password, 'MEMBER', new_member]
+        user[user_ID] = ['MEMBER', new_member]
         print('You have successfully registered, please proceed to Login page')
 
 
@@ -81,14 +81,14 @@ def Login():
         return
     
     password = input('Password: ')
-    while (password != user[user_id][0]):
+    while (password != user[user_id][1].get_password()):
         print('Wrong password!')
         password = input('Password: ')
     
-    if(user[user_id][1] == 'ADMIN'):
-        Admin_menu(user[user_id][2])
+    if(user[user_id][0] == 'ADMIN'):
+        Admin_menu(user[user_id][1])
     else:
-        Member_menu(user[user_id][2])
+        Member_menu(user[user_id][1])
         
 
 
@@ -98,6 +98,7 @@ def Admin_menu(user_obj):
     print("******************Welcome Back******************")
     f = -1
     while (f != 4): 
+        print("******************Admin Menu******************")
         print("1. Library Management")
         print("2. Personal Library Access (Borrowing, Returning, etc)")
         print("3. Account Setting")
@@ -124,6 +125,7 @@ def Member_menu(user_obj):
     print("******************Welcome Back******************")
     f = -1
     while (f != 3): 
+        print("******************Member Menu******************")
         print("1. Library Access")
         print("2. Account Setting")
         print("3. Exit Member Menu")
